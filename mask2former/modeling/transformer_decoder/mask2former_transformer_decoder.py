@@ -387,11 +387,13 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
 
         predictions_class = []
         predictions_mask = []
+        predictions_attns = []
 
         # prediction heads on learnable query features
         outputs_class, outputs_mask, attn_mask = self.forward_prediction_heads(output, mask_features, attn_mask_target_size=size_list[0])
         predictions_class.append(outputs_class)
         predictions_mask.append(outputs_mask)
+        predictions_attns.append(attn_mask)
 
         for i in range(self.num_layers):
             level_index = i % self.num_feature_levels
@@ -418,6 +420,7 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
             outputs_class, outputs_mask, attn_mask = self.forward_prediction_heads(output, mask_features, attn_mask_target_size=size_list[(i + 1) % self.num_feature_levels])
             predictions_class.append(outputs_class)
             predictions_mask.append(outputs_mask)
+            predictions_attns.append(attn_mask)
 
         assert len(predictions_class) == self.num_layers + 1
 
@@ -426,7 +429,8 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
             'pred_masks': predictions_mask[-1],
             'aux_outputs': self._set_aux_loss(
                 predictions_class if self.mask_classification else None, predictions_mask
-            )
+            ),
+            'attn_masks': predictions_attns
         }
         return out
 
