@@ -393,7 +393,6 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
         outputs_class, outputs_mask, attn_mask = self.forward_prediction_heads(output, mask_features, attn_mask_target_size=size_list[0])
         predictions_class.append(outputs_class)
         predictions_mask.append(outputs_mask)
-        predictions_attns.append(attn_mask)
 
         for i in range(self.num_layers):
             level_index = i % self.num_feature_levels
@@ -411,7 +410,10 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
                 tgt_key_padding_mask=None,
                 query_pos=query_embed
             )
-            
+            out_attn = output
+            predictions_attns.append(out_attn)
+
+
             # FFN
             output = self.transformer_ffn_layers[i](
                 output
@@ -420,7 +422,7 @@ class MultiScaleMaskedTransformerDecoder(nn.Module):
             outputs_class, outputs_mask, attn_mask = self.forward_prediction_heads(output, mask_features, attn_mask_target_size=size_list[(i + 1) % self.num_feature_levels])
             predictions_class.append(outputs_class)
             predictions_mask.append(outputs_mask)
-            predictions_attns.append(attn_mask)
+            # predictions_attns.append(attn_mask)
 
         assert len(predictions_class) == self.num_layers + 1
 
